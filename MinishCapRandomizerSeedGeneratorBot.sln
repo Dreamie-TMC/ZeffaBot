@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinishCapRandomizerSeedGeneratorBot", "MinishCapRandomizerSeedGeneratorBot\MinishCapRandomizerSeedGeneratorBot.csproj", "{3D3FE958-0DCB-406F-964A-6A04424CA181}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3} = {3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RandomizerCore", "..\rando-dev\RandomizerCore\RandomizerCore.csproj", "{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorzCore", "..\rando-dev\Vendor\ColorzCore\ColorzCore\ColorzCore.csproj", "{CE17E309-78D2-47E5-AEB5-1C3DED371C7B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D3FE958-0DCB-406F-964A-6A04424CA181}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3FE958-0DCB-406F-964A-6A04424CA181}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3FE958-0DCB-406F-964A-6A04424CA181}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3FE958-0DCB-406F-964A-6A04424CA181}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CBAA8EC-4AA2-49C3-BC9F-53BFC61822B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE17E309-78D2-47E5-AEB5-1C3DED371C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE17E309-78D2-47E5-AEB5-1C3DED371C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE17E309-78D2-47E5-AEB5-1C3DED371C7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE17E309-78D2-47E5-AEB5-1C3DED371C7B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5706681D-28CF-4051-AF4F-FD47A2BB86F8}
+	EndGlobalSection
+EndGlobal
