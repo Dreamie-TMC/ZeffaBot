@@ -8,7 +8,7 @@ public class APIConnector
     internal DiscordSocketClient Client { get; set; }
     internal BotInitializer Initializer { get; set; }
     internal SlashCommandHandler SlashHandler { get; set; }
-    internal GuildJoinHandler GuildJoinHandler { get; set; }
+    internal GuildEventHandler GuildEventHandler { get; set; }
     internal AppSettings AppSettings { get; set; }
 
     public APIConnector()
@@ -18,13 +18,13 @@ public class APIConnector
     public APIConnector(DiscordSocketClient client,
         BotInitializer initializer,
         SlashCommandHandler handler, 
-        GuildJoinHandler guildJoinHandler,
+        GuildEventHandler guildEventHandler,
         AppSettings settings)
     {
         Client = client;
         Initializer = initializer;
         SlashHandler = handler;
-        GuildJoinHandler = guildJoinHandler;
+        GuildEventHandler = guildEventHandler;
         AppSettings = settings;
     }
     
@@ -35,7 +35,10 @@ public class APIConnector
         await Client.LoginAsync(TokenType.Bot, AppSettings.DiscordAccessToken);
         Client.Ready += ClientReady;
         Client.SlashCommandExecuted += SlashHandler.HandleSlashCommands;
-        Client.JoinedGuild += GuildJoinHandler.HandleGuildJoin;
+        Client.JoinedGuild += GuildEventHandler.HandleGuildJoin;
+        Client.LeftGuild += GuildEventHandler.HandleGuildLeave;
+        Client.ChannelDestroyed += GuildEventHandler.HandleChannelDestroyed;
+        Client.RoleDeleted += GuildEventHandler.HandleRoleDeleted;
         await Client.StartAsync();
     }
     

@@ -9,13 +9,15 @@ public class SlashCommandHandler
     internal AboutHandler AboutHandler { get; set; }
     internal AsyncHandler AsyncHandler { get; set; }
     internal UpdateInfoHandler UpdateInfoHandler { get; set; }
+    internal ScheduleAsyncsHandler ScheduleAsyncsHandler { get; set; }
 
-    public SlashCommandHandler(SeedHandler seedHandler, AboutHandler aboutHandler, AsyncHandler asyncHandler, UpdateInfoHandler updateInfoHandler)
+    public SlashCommandHandler(SeedHandler seedHandler, AboutHandler aboutHandler, AsyncHandler asyncHandler, UpdateInfoHandler updateInfoHandler, ScheduleAsyncsHandler scheduleAsyncsHandler)
     {
         SeedHandler = seedHandler;
         AboutHandler = aboutHandler;
         AsyncHandler = asyncHandler;
         UpdateInfoHandler = updateInfoHandler;
+        ScheduleAsyncsHandler = scheduleAsyncsHandler;
     }
     
     public async Task HandleSlashCommands(SocketSlashCommand command)
@@ -33,6 +35,12 @@ public class SlashCommandHandler
                 break;
             case Constants.ShowUpdateInfo:
                 await UpdateInfoHandler.HandleUpdateInfoCommand(command);
+                break;
+            case Constants.SetupRegularAsyncs:
+                await ScheduleAsyncsHandler.HandleSetupScheduledAsyncsCommand(command);
+                break;
+            case Constants.RemoveAsyncConfig:
+                await ScheduleAsyncsHandler.HandleRemoveConfigCommand(command);
                 break;
         }
     }

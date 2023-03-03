@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Discord;
 using Discord.WebSocket;
+using MinishCapRandomizerSeedGeneratorBot.Actions.Tasks;
 using MinishCapRandomizerSeedGeneratorBot.Threading.Models;
 using RandomizerCore.Controllers;
 
@@ -9,10 +10,12 @@ namespace MinishCapRandomizerSeedGeneratorBot.Actions;
 public class AsyncGenerationAction
 {
     internal DiscordSocketClient SocketClient { get; set; }
+    internal GenerateSeedTask SeedTask { get; set; }
     
-    public AsyncGenerationAction(DiscordSocketClient client)
+    public AsyncGenerationAction(DiscordSocketClient client, GenerateSeedTask seedTask)
     {
         SocketClient = client;
+        SeedTask = seedTask;
     }
     
     public async Task GenerateAsyncSeed(SeedGenerationRequest request)
@@ -20,118 +23,80 @@ public class AsyncGenerationAction
         var responseBuilder = new StringBuilder();
 
         var shuffler = new ShufflerController();
+
+        request.UploadSpoiler = true;
+
+        var files = await SeedTask.GenerateSeed(shuffler, 10, request, responseBuilder, request.IsAutomatedGeneration);
+
+        if (files.patch == null || files.spoiler == null) return;
+
+        using var patchStream = new MemoryStream(files.patch.Content);
+        using var spoilerStream = new MemoryStream(); 
         
-        responseBuilder.Append(shuffler.AppName).Append(' ')
-            .Append(shuffler.VersionName)
-            .Append(' ').Append(shuffler.RevName)
-            .Append(' ').AppendLine("Initialized!");
-        var time = DateTime.Now;
-        responseBuilder.AppendLine("Beginning seed generation...");
-
-        shuffler.LoadLogicFile();
-        
-        shuffler.SetRandomizationSeed(request.Seed);
-        
-        if (!string.IsNullOrEmpty(request.SettingsString))
-        {
-            var result = shuffler.LoadSettingsFromSettingString(request.SettingsString);
-            if (!result.WasSuccessful)
-            {
-                responseBuilder.AppendLine("[ERROR] Failed to load settings string! Please make sure the settings string is created on the newest release of the randomizer and uses default logic!");
-                await ReturnErrorResponse(responseBuilder, request.Command);
-                return;
-            }
-            
-            responseBuilder.AppendLine("[INFO] Settings string loaded successfully");
-        }
-
-        if (!string.IsNullOrEmpty(request.CosmeticsString))
-        {
-            var result = shuffler.LoadCosmeticsFromCosmeticsString(request.CosmeticsString);
-            if (!result.WasSuccessful)
-            {
-                responseBuilder.AppendLine(
-                    "[ERROR] Failed to load cosmetics string! Please make sure the cosmetics string is created on the newest release of the randomizer and uses default logic!");
-                await ReturnErrorResponse(responseBuilder, request.Command);
-                return;
-            }
-
-            responseBuilder.AppendLine("[INFO] Cosmetics string loaded successfully");
-        }
-
-        if (request.ShowSeedInfoInResponse)
-            responseBuilder.Append("[INFO] Seed number: ").Append(request.Seed).AppendLine();
-        
-        shuffler.LoadLocations();
-
-        var shufflerResult = shuffler.Randomize();
-
-        var failedAttempts = 0;
-        
-        while (!shufflerResult.WasSuccessful && failedAttempts < 10)
-        {
-            ++failedAttempts;
-            shuffler.LoadLocations();
-            shufflerResult = shuffler.Randomize();
-        }
-
-        if (!shufflerResult.WasSuccessful)
-        {
-            responseBuilder.Append("[ERROR] Failed to randomize! Shuffler returned error: ")
-                .AppendLine(shufflerResult.ErrorMessage ?? shufflerResult.Error?.Message);
-            await ReturnErrorResponse(responseBuilder, request.Command);
-            return;
-        }
-
-        responseBuilder.AppendLine("[INFO] Seed randomized successfully");
-
-        var patch = shuffler.CreatePatch();
-
-        using var patchStream = new MemoryStream(patch.Content);
-        using var spoilerStream = new MemoryStream();
         // ReSharper disable once UseAwaitUsing
         using var writer = new StreamWriter(spoilerStream);
-
-        responseBuilder.AppendLine("[INFO] Patch created successfully");
-
         // ReSharper disable MethodHasAsyncOverload
-        writer.Write(shuffler.CreateSpoiler());
+        writer.Write(files.spoiler);
         writer.Flush();
         // ReSharper enable MethodHasAsyncOverload
         spoilerStream.Position = 0;
-        responseBuilder.AppendLine("[INFO] Spoiler created successfully");
 
-        responseBuilder.Append("[INFO] Settings: ").AppendLine(shuffler.GetSettingsString());
-        responseBuilder.Append("[INFO] Cosmetics: ").AppendLine(shuffler.GetCosmeticsString());
-        responseBuilder.AppendLine("...Seed generation succeeded!");
-        var totalTime = DateTime.Now - time;
-        responseBuilder.Append("Total execution time: ").Append(totalTime.Seconds).Append('.')
-            .Append(totalTime.Milliseconds.ToString("000")).AppendLine(" seconds!");
+        var forum = GetForumChannel(request.GuildNumber);
 
-        var guild = SocketClient.Guilds.First(guild => guild.Id == request.GuildNumber);
-        var forum = guild.ForumChannels.First(channel =>
-            channel.Name.Equals(Constants.AsyncPostChannelName, StringComparison.OrdinalIgnoreCase));
-
-        var today = DateTime.Today;
-        await forum.CreatePostWithFileAsync(
-            $"Async #{request.AsyncSeedNumber} {today:MMMM-dd-yyyy}",
-            new FileAttachment(patchStream, $"Patch {request.AsyncSeedNumber}.bps"), ThreadArchiveDuration.OneWeek,
-            text: $"Async seed {request.AsyncSeedNumber} generated by {request.Command.User.Username}!", slowmode: 30);
-        
-        try
+        if (!request.IsAutomatedGeneration)
         {
-            await request.Command.User.SendFileAsync(new FileAttachment(spoilerStream, 
-                $"Spoiler Log {request.AsyncSeedNumber}.txt", isSpoiler: true), 
-                $"Here is the spoiler log for async seed #{request.AsyncSeedNumber}!\r\nHere is the log:{responseBuilder}");
+            var today = DateTime.Today;
+            await forum.CreatePostWithFileAsync(
+                $"Async #{request.AsyncSeedNumber} {today:MMMM-dd-yyyy}",
+                new FileAttachment(patchStream, $"Patch {request.AsyncSeedNumber}.bps"), ThreadArchiveDuration.OneWeek,
+                text: $"Async seed {request.AsyncSeedNumber} generated by {request.Command.User.Username}!",
+                slowmode: 30);
+
+            try
+            {
+                await request.Command.User.SendFileAsync(new FileAttachment(spoilerStream,
+                        $"Spoiler Log {request.AsyncSeedNumber}.txt", isSpoiler: true),
+                    $"Here is the spoiler log for async seed #{request.AsyncSeedNumber}!\nHere is the log:\n{responseBuilder}");
+            }
+            catch
+            {
+                // ignored
+            }
         }
-        catch
+        else
         {
-            // ignored
+            var today = DateTime.Today;
+            await forum.CreatePostWithFileAsync(
+                $"Automated async #{request.AsyncSeedNumber} for the week of {today:MMMM-dd}",
+                new FileAttachment(patchStream, $"Automated Async Patch {request.AsyncSeedNumber}.bps"), ThreadArchiveDuration.OneWeek,
+                text: $"Automatic Async Seed #{request.AsyncSeedNumber}!",
+                slowmode: 30);
+
+            try
+            {
+                var spoilerChannel = GetAutomaticAsyncSpoilerPostChannel(request.GuildNumber);
+                await spoilerChannel.SendFileAsync(new FileAttachment(spoilerStream,
+                        $"Spoiler Log for automated async {request.AsyncSeedNumber}.txt", isSpoiler: true),
+                    $"Here is the spoiler log for automated async seed #{request.AsyncSeedNumber}!");
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
-    private async Task ReturnErrorResponse(StringBuilder responseBuilder, SocketSlashCommand command)
+    private SocketForumChannel GetForumChannel(ulong guildId)
     {
-        await command.FollowupAsync(responseBuilder.ToString(), ephemeral: true);
+        var guild = SocketClient.Guilds.First(guild => guild.Id == guildId);
+        return guild.ForumChannels.First(channel =>
+            channel.Name.Equals(Constants.AsyncPostChannelName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private SocketTextChannel GetAutomaticAsyncSpoilerPostChannel(ulong guildId)
+    {
+        var guild = SocketClient.Guilds.First(guild => guild.Id == guildId);
+        return guild.TextChannels.First(channel =>
+            channel.Name.Equals(Constants.AutomaticAsyncSpoilerChannelName, StringComparison.OrdinalIgnoreCase));
     }
 }

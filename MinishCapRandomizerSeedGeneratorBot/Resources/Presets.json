@@ -1,0 +1,22 @@
+﻿[
+  {
+    "PresetName": "Beginner",
+    "PresetString": "NlgC5VAAQQgAeWFAEAAAAAAAAAQAAAAAAAAAAAQAAAAAAAAAAAQAAAgAAAAAAAQAABQAFB4="
+  },
+  {
+    "PresetName": "Intermediate",
+    "PresetString": "NlgC5VAAQQgAeWHAEAAAAgAAAAQAAAgAAAAAAAgQAAAAAAAAQAQAAAAAAAAAAAQAQhQAFB4="
+  },
+  {
+    "PresetName": "Advanced",
+    "PresetString": "NlgC5VAAQQsRfWnCPAgARAQwQQQQQRAAQAAAAAggAgAQQAQAQwgwAQAAQQQQAAQwRBSAFB4="
+  },
+  {
+    "PresetName": "Max Random",
+    "PresetString": "NlgC5VAAQf/9f2/jfAhgRgQQQQQQQRgCgAAAAAggAgAQQAQARQgQAQAAQQQQAAQQRhQAiIg="
+  },
+  {
+    "PresetName": "Expert",
+    "PresetString": "NlgC5VAAQQERfWnGDAhgRgQQQgQgQRgSgQQQQQggQgAQQAQARQwQQQQQQQQQQQAQRhSAAQE="
+  }
+]

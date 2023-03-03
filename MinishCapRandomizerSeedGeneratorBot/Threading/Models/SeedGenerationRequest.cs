@@ -12,7 +12,7 @@ public class SeedGenerationRequest
     public bool ShowSeedInfoInResponse { get; set; }
     public bool OnlyRespondToCaller { get; set; }
     public bool IsAsync { get; set; }
+    public bool IsAutomatedGeneration { get; set; }
     public int AsyncSeedNumber { get; set; }
     public ulong GuildNumber { get; set; }
-    public ulong ChannelNumber { get; set; }
 }

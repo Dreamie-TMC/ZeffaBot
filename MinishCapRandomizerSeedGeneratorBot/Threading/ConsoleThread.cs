@@ -3,10 +3,12 @@
 public class ConsoleThread
 {
     internal ThreadDispatcher Dispatcher { get; set; }
+    internal ScheduledEventDispatcher ScheduledEventDispatcher { get; set; }
 
-    public ConsoleThread(ThreadDispatcher dispatcher)
+    public ConsoleThread(ThreadDispatcher dispatcher, ScheduledEventDispatcher scheduledEventDispatcher)
     {
         Dispatcher = dispatcher;
+        ScheduledEventDispatcher = scheduledEventDispatcher;
     }
     
     public void Loop()
@@ -19,6 +21,7 @@ public class ConsoleThread
             if (!string.IsNullOrEmpty(result) && result.Equals("Exit", StringComparison.OrdinalIgnoreCase))
             {
                 Dispatcher.SetExitingState();
+                ScheduledEventDispatcher.SetExiting();
                 hasExited = true;
             }
 
