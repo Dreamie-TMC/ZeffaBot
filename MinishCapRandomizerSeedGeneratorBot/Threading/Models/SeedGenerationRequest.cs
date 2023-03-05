@@ -11,6 +11,7 @@ public class SeedGenerationRequest
     public bool UploadSpoiler { get; set; }
     public bool ShowSeedInfoInResponse { get; set; }
     public bool OnlyRespondToCaller { get; set; }
+    public bool IsRaceSeed { get; set; }
     public bool IsAsync { get; set; }
     public bool IsAutomatedGeneration { get; set; }
     public int AsyncSeedNumber { get; set; }

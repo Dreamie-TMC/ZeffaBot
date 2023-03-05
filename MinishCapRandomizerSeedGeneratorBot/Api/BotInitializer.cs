@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using MinishCapRandomizerSeedGeneratorBot.Api.Handlers;
+using MinishCapRandomizerSeedGeneratorBot.Threading;
 
 namespace MinishCapRandomizerSeedGeneratorBot.Api;
 
@@ -12,15 +13,19 @@ public class BotInitializer
     internal AsyncHandler AsyncHandler { get; set; }
     internal UpdateInfoHandler UpdateInfoHandler { get; set; }
     internal ScheduleAsyncsHandler ScheduleAsyncsHandler { get; set; }
+    internal GenerateRaceSeedHandler GenerateRaceSeedHandler { get; set; }
+    internal SetupRaceSettingsHandler SetupRaceSettingsHandler { get; set; }
 
-    private Dictionary<ulong, Mutex> _guildUpdaterMutexes;
+    private SynchronizedList<ulong> GuildsCurrentlyBeingUpdated { get; set; }
 
     public BotInitializer(DiscordSocketClient client,
         SeedHandler seedHandler, 
         AboutHandler aboutHandler, 
         AsyncHandler asyncHandler, 
         UpdateInfoHandler updateInfoHandler,
-        ScheduleAsyncsHandler scheduleAsyncsHandler)
+        ScheduleAsyncsHandler scheduleAsyncsHandler,
+        SetupRaceSettingsHandler setupRaceSettingsHandler,
+        GenerateRaceSeedHandler generateRaceSeedHandler)
     {
         Client = client;
         SeedHandler = seedHandler;
@@ -28,7 +33,9 @@ public class BotInitializer
         AsyncHandler = asyncHandler;
         UpdateInfoHandler = updateInfoHandler;
         ScheduleAsyncsHandler = scheduleAsyncsHandler;
-        _guildUpdaterMutexes = new Dictionary<ulong, Mutex>();
+        SetupRaceSettingsHandler = setupRaceSettingsHandler;
+        GenerateRaceSeedHandler = generateRaceSeedHandler;
+        GuildsCurrentlyBeingUpdated = new SynchronizedList<ulong>();
     }
 
     public async Task RunInitializationCode()
@@ -37,27 +44,26 @@ public class BotInitializer
         
         foreach (var guild in guilds)
         {
-            await RunInitializationCodeOnGuild(guild);
+            new Thread(async () => await RunInitializationCodeOnGuild(guild)).Start();
         }
     }
 
     public async Task RunInitializationCodeOnGuild(SocketGuild guild)
     {
-        var seedCommand = SeedHandler.BuildSlashCommand();
-        var aboutCommand = AboutHandler.BuildSlashCommand();
-        var asyncCommand = AsyncHandler.BuildSlashCommand();
-        var updateCommand = UpdateInfoHandler.BuildSlashCommand();
+        if (GuildsCurrentlyBeingUpdated.Contains(guild.Id))
+            return;
+        
+        GuildsCurrentlyBeingUpdated.Add(guild.Id);
+        
+        var generateSeedCommand = SeedHandler.BuildSlashCommand();
+        var showAboutInfoCommand = AboutHandler.BuildSlashCommand();
+        var generateAsyncCommand = AsyncHandler.BuildSlashCommand();
+        var showUpdateInfoCommand = UpdateInfoHandler.BuildSlashCommand();
         var scheduleAsyncsCommand = ScheduleAsyncsHandler.BuildSlashCommand();
-        var removeSettingsCommand = ScheduleAsyncsHandler.BuildRemoveCommand();
+        var removeAsyncConfigCommand = ScheduleAsyncsHandler.BuildRemoveCommand();
+        var setupRaceSettingsCommand = SetupRaceSettingsHandler.BuildSlashCommand();
+        var generateRaceSeedCommand = GenerateRaceSeedHandler.BuildSlashCommand();
 
-        if (!_guildUpdaterMutexes.TryGetValue(guild.Id, out var mutex))
-        {
-            mutex = new Mutex();
-            _guildUpdaterMutexes.Add(guild.Id, mutex);
-        }
-        
-        Lock(mutex);
-        
         var commands = await guild.GetApplicationCommandsAsync();
 
         try
@@ -65,19 +71,40 @@ public class BotInitializer
             IRole? asyncRole = null;
             if (!guild.Roles.Any(role => role.Name.Equals(Constants.AsyncRole)))
                 asyncRole = await guild.CreateRoleAsync(Constants.AsyncRole);
+            if (!guild.Roles.Any(role => role.Name.Equals(Constants.RaceModeratorRole)))
+                await guild.CreateRoleAsync(Constants.RaceModeratorRole);
 
-            if (commands.All(command => command.Name != Constants.GenerateSeed))
-                await guild.CreateApplicationCommandAsync(seedCommand.Build());
-            if (commands.All(command => command.Name != Constants.AboutZeffa))
-                await guild.CreateApplicationCommandAsync(aboutCommand.Build());
-            if (commands.All(command => command.Name != Constants.GenerateAsync))
-                await guild.CreateApplicationCommandAsync(asyncCommand.Build());
-            if (commands.All(command => command.Name != Constants.ShowUpdateInfo))
-                await guild.CreateApplicationCommandAsync(updateCommand.Build());
-            if (commands.All(command => command.Name != Constants.SetupRegularAsyncs))
+            var command = commands.FirstOrDefault(command => command.Name != Constants.GenerateSeed);
+            if (command == null || command.Options.Count != generateSeedCommand.Options.Count)
+                await guild.CreateApplicationCommandAsync(generateSeedCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.AboutZeffa);
+            if (command == null)
+                await guild.CreateApplicationCommandAsync(showAboutInfoCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.GenerateAsync);
+            if (command == null || command.Options.Count != generateAsyncCommand.Options.Count)
+                await guild.CreateApplicationCommandAsync(generateAsyncCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.ShowUpdateInfo);
+            if (command == null)
+                await guild.CreateApplicationCommandAsync(showUpdateInfoCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.SetupRegularAsyncs);
+            if (command == null || command.Options.Count != scheduleAsyncsCommand.Options.Count)
                 await guild.CreateApplicationCommandAsync(scheduleAsyncsCommand.Build());
-            if (commands.All(command => command.Name != Constants.RemoveAsyncConfig))
-                await guild.CreateApplicationCommandAsync(removeSettingsCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.RemoveAsyncConfig);
+            if (command == null)
+                await guild.CreateApplicationCommandAsync(removeAsyncConfigCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.SetupRaceSettings);
+            if (command == null || command.Options.Count != setupRaceSettingsCommand.Options.Count)
+                await guild.CreateApplicationCommandAsync(setupRaceSettingsCommand.Build());
+            
+            command = commands.FirstOrDefault(command => command.Name != Constants.GenerateRaceSeed);
+            if (command == null || command.Options.Count != generateRaceSeedCommand.Options.Count)
+                await guild.CreateApplicationCommandAsync(generateRaceSeedCommand.Build());
 
             ulong categoryId = 0;
 
@@ -147,25 +174,16 @@ public class BotInitializer
                 await tempChannel.AddPermissionOverwriteAsync(asyncRole,
                     new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Deny));
             }
-            Unlock(mutex);
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Failed to create command in guild {guild.Name}! Please try again later.");
+            Console.WriteLine($"Failed to update guild {guild.Name}! Please try again later.");
             Console.WriteLine(e.Message);
             Console.WriteLine(e.StackTrace);
-            Unlock(mutex);
-            throw;
         }
-    }
-
-    private void Lock(Mutex mutex)
-    {
-        mutex.WaitOne();
-    }
-
-    private void Unlock(Mutex mutex)
-    {
-        mutex.ReleaseMutex();
+        finally
+        {
+            GuildsCurrentlyBeingUpdated.Remove(guild.Id);
+        }
     }
 }

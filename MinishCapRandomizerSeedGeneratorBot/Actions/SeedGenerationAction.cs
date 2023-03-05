@@ -22,64 +22,14 @@ public class SeedGenerationAction
 
         var shuffler = new ShufflerController();
 
-        var files = await SeedTask.GenerateSeed(shuffler, 1, request, responseBuilder);
+        if (request.IsRaceSeed)
+        {
+            request.ShowSeedInfoInResponse = false;
+            request.UploadSpoiler = true;
+            request.OnlyRespondToCaller = false;
+        }
 
-        // responseBuilder.Append(shuffler.AppName).Append(' ')
-        //     .Append(shuffler.VersionName)
-        //     .Append(' ').Append(shuffler.RevName)
-        //     .Append(' ').AppendLine("Initialized!");
-        // var time = DateTime.Now;
-        // responseBuilder.AppendLine("Beginning seed generation...");
-        //
-        // shuffler.LoadLogicFile();
-        //
-        // shuffler.SetRandomizationSeed(request.Seed);
-        //
-        // if (!string.IsNullOrEmpty(request.SettingsString))
-        // {
-        //     var result = shuffler.LoadSettingsFromSettingString(request.SettingsString);
-        //     if (!result.WasSuccessful)
-        //     {
-        //         responseBuilder.AppendLine("[ERROR] Failed to load settings string! Please make sure the settings string is created on the newest release of the randomizer and uses default logic!");
-        //         await ReturnErrorResponse(responseBuilder, request.Command);
-        //         return;
-        //     }
-        //     
-        //     responseBuilder.AppendLine("[INFO] Settings string loaded successfully");
-        // }
-        //
-        // if (!string.IsNullOrEmpty(request.CosmeticsString))
-        // {
-        //     var result = shuffler.LoadCosmeticsFromCosmeticsString(request.CosmeticsString);
-        //     if (!result.WasSuccessful)
-        //     {
-        //         responseBuilder.AppendLine(
-        //             "[ERROR] Failed to load cosmetics string! Please make sure the cosmetics string is created on the newest release of the randomizer and uses default logic!");
-        //         await ReturnErrorResponse(responseBuilder, request.Command);
-        //         return;
-        //     }
-        //
-        //     responseBuilder.AppendLine("[INFO] Cosmetics string loaded successfully");
-        // }
-        //
-        // if (request.ShowSeedInfoInResponse)
-        //     responseBuilder.Append("[INFO] Seed number: ").Append(request.Seed).AppendLine();
-        //
-        // shuffler.LoadLocations();
-        //
-        // var shufflerResult = shuffler.Randomize();
-        //
-        // if (!shufflerResult.WasSuccessful)
-        // {
-        //     responseBuilder.Append("[ERROR] Failed to randomize! Shuffler returned error: ")
-        //         .AppendLine(shufflerResult.ErrorMessage ?? shufflerResult.Error?.Message);
-        //     await ReturnErrorResponse(responseBuilder, request.Command);
-        //     return;
-        // }
-        //
-        // responseBuilder.AppendLine("[INFO] Seed randomized successfully");
-        //
-        // var patch = shuffler.CreatePatch();
+        var files = await SeedTask.GenerateSeed(shuffler, 1, request, responseBuilder);
 
         if (files.patch == null) return;
         
@@ -99,21 +49,26 @@ public class SeedGenerationAction
             writer.Flush();
             // ReSharper enable MethodHasAsyncOverload
             spoilerStream.Position = 0;
-            attachments.Add(new FileAttachment(spoilerStream, "Spoiler Log.txt", isSpoiler: true));
+            if (!request.IsRaceSeed)
+                attachments.Add(new FileAttachment(spoilerStream, "Spoiler Log.txt", isSpoiler: true));
         }
-
-        // responseBuilder.Append("[INFO] Settings: ").AppendLine(shuffler.GetSettingsString());
-        // responseBuilder.Append("[INFO] Cosmetics: ").AppendLine(shuffler.GetCosmeticsString());
-        // responseBuilder.AppendLine("...Seed generation succeeded!");
-        // var totalTime = DateTime.Now - time;
-        // responseBuilder.Append("Total execution time: ").Append(totalTime.Seconds).Append('.')
-        //     .Append(totalTime.Milliseconds.ToString("000")).AppendLine(" seconds!");
-
-        await request.Command.FollowupWithFilesAsync(attachments, responseBuilder.ToString(), ephemeral: request.OnlyRespondToCaller);
-    }
-
-    private async Task ReturnErrorResponse(StringBuilder responseBuilder, SocketSlashCommand command)
-    {
-        await command.FollowupAsync(responseBuilder.ToString(), ephemeral: true);
+        
+        await request.Command.FollowupWithFilesAsync(attachments, 
+            request.IsRaceSeed ? "Race seed generated! Here is the patch, happy racing!" : responseBuilder.ToString(), 
+            ephemeral: request.OnlyRespondToCaller);
+        
+        if (request.IsRaceSeed)
+        {
+            try
+            {
+                await request.Command.User.SendFileAsync(new FileAttachment(spoilerStream,
+                        $"Spoiler Log.txt", isSpoiler: true),
+                    $"Here is the spoiler log for the race seed you generated!\nHere is the output log:\n{responseBuilder}");
+            }
+            catch
+            {
+                // ignored
+            }
+        }
     }
 }

@@ -10,14 +10,24 @@ public class SlashCommandHandler
     internal AsyncHandler AsyncHandler { get; set; }
     internal UpdateInfoHandler UpdateInfoHandler { get; set; }
     internal ScheduleAsyncsHandler ScheduleAsyncsHandler { get; set; }
+    internal GenerateRaceSeedHandler GenerateRaceSeedHandler { get; set; }
+    internal SetupRaceSettingsHandler SetupRaceSettingsHandler { get; set; }
 
-    public SlashCommandHandler(SeedHandler seedHandler, AboutHandler aboutHandler, AsyncHandler asyncHandler, UpdateInfoHandler updateInfoHandler, ScheduleAsyncsHandler scheduleAsyncsHandler)
+    public SlashCommandHandler(SeedHandler seedHandler,
+        AboutHandler aboutHandler,
+        AsyncHandler asyncHandler,
+        UpdateInfoHandler updateInfoHandler,
+        ScheduleAsyncsHandler scheduleAsyncsHandler, 
+        SetupRaceSettingsHandler setupRaceSettingsHandler,
+        GenerateRaceSeedHandler generateRaceSeedHandler)
     {
         SeedHandler = seedHandler;
         AboutHandler = aboutHandler;
         AsyncHandler = asyncHandler;
         UpdateInfoHandler = updateInfoHandler;
         ScheduleAsyncsHandler = scheduleAsyncsHandler;
+        GenerateRaceSeedHandler = generateRaceSeedHandler;
+        SetupRaceSettingsHandler = setupRaceSettingsHandler;
     }
     
     public async Task HandleSlashCommands(SocketSlashCommand command)
@@ -41,6 +51,12 @@ public class SlashCommandHandler
                 break;
             case Constants.RemoveAsyncConfig:
                 await ScheduleAsyncsHandler.HandleRemoveConfigCommand(command);
+                break;
+            case Constants.SetupRaceSettings:
+                await SetupRaceSettingsHandler.HandleSetupRaceSettingsCommand(command);
+                break;
+            case Constants.GenerateRaceSeed:
+                await GenerateRaceSeedHandler.HandleGenerateRaceSeedCommand(command);
                 break;
         }
     }

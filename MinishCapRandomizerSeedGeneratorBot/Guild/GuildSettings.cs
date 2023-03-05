@@ -79,6 +79,9 @@ public class GuildSettings
             case AsyncConfig asyncConfig:
                 guild.AsyncConfig = asyncConfig;
                 break;
+            case RaceConfig raceConfig:
+                guild.RaceConfig = raceConfig;
+                break;
         }
     }
 

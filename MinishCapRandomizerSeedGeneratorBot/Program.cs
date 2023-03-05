@@ -53,26 +53,35 @@ internal class Program
 
         serviceCollection.TryAddSingleton<DiscordSocketClient>();
         serviceCollection.TryAddSingleton<DiscordSocketConfig>();
+        
         serviceCollection.TryAddSingleton<APIConnector>();
+        
         serviceCollection.TryAddSingleton<SlashCommandHandler>();
         serviceCollection.TryAddSingleton<GuildEventHandler>();
         serviceCollection.TryAddSingleton<BotInitializer>();
+        
         serviceCollection.TryAddSingleton<SeedHandler>();
         serviceCollection.TryAddSingleton<AboutHandler>();
         serviceCollection.TryAddSingleton<AsyncHandler>();
         serviceCollection.TryAddSingleton<UpdateInfoHandler>();
         serviceCollection.TryAddSingleton<ScheduleAsyncsHandler>();
+        serviceCollection.TryAddSingleton<GenerateRaceSeedHandler>();
+        serviceCollection.TryAddSingleton<SetupRaceSettingsHandler>();
+        
         serviceCollection.TryAddSingleton<ShufflerController>();
+        
         serviceCollection.TryAddSingleton<SynchronizedQueue>();
+        serviceCollection.TryAddSingleton<GenerateSeedTask>();
+        
         serviceCollection.TryAddSingleton<SeedGenerationAction>();
         serviceCollection.TryAddSingleton<AsyncGenerationAction>();
         serviceCollection.TryAddSingleton<ThreadDispatcher>();
-        serviceCollection.TryAddSingleton<AppSettings>();
-        serviceCollection.TryAddSingleton<GuildSettings>();
         serviceCollection.TryAddSingleton<ConsoleThread>();
         serviceCollection.TryAddSingleton<ScheduledEventDispatcher>();
-        serviceCollection.TryAddSingleton<GenerateSeedTask>();
         serviceCollection.TryAddSingleton<ScheduledEventDispatcher>();
+        
+        serviceCollection.TryAddSingleton<AppSettings>();
+        serviceCollection.TryAddSingleton<GuildSettings>();
         serviceCollection.TryAddSingleton<PresetHandler>();
 
         return serviceCollection.BuildServiceProvider();
