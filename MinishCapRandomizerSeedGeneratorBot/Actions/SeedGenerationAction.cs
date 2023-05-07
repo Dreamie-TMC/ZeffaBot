@@ -70,8 +70,11 @@ public class SeedGenerationAction
         {
             try
             {
-                await request.Command.User.SendFileAsync(new FileAttachment(spoilerStream,
-                        "Spoiler Log.txt", isSpoiler: true),
+                await request.Command.User.SendFilesAsync(new[]
+                    {
+                        new FileAttachment(spoilerStream,
+                            "Spoiler Log.txt", isSpoiler: true),
+                    },
                     $"Here is the spoiler log for the race seed you generated!\nHere is the output log:\n{responseBuilder}");
             }
             catch
