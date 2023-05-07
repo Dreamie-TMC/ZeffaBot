@@ -27,6 +27,9 @@ public class ScheduleAsyncsHandler
 
     public async Task HandleSetupScheduledAsyncsCommand(SocketSlashCommand command)
     {
+        await command.RespondAsync("This command is not currently supported. I am sorry for the inconvenience.");
+        return;
+        
         if (!command.GuildId.HasValue || !command.ChannelId.HasValue)
         {
             await command.RespondAsync("Cannot run this command here!", ephemeral: true);
