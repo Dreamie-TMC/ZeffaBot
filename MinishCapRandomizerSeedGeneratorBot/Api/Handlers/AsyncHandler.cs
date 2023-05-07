@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using MinishCapRandomizerSeedGeneratorBot.Models;
 using MinishCapRandomizerSeedGeneratorBot.Threading;
 using MinishCapRandomizerSeedGeneratorBot.Threading.Models;
+using RandomizerCore.Random;
 
 namespace MinishCapRandomizerSeedGeneratorBot.Api.Handlers;
 
@@ -64,7 +65,7 @@ public class AsyncHandler
             var settingsString = parameters.FirstOrDefault(param => param.Name == $"{SettingsString}-{i + 1}");
             var cosmeticsString = parameters.FirstOrDefault(param => param.Name == $"{CosmeticsString}-{i + 1}");
 
-            var seed = new Random().Next();
+            var seed = new SquaresRandomNumberGenerator().Next();
             var settings = preset == null ? 
                 settingsString == null ? "" : (string)settingsString.Value 
                 : (string)preset.Value;

@@ -1,10 +1,12 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Discord;
 using Discord.WebSocket;
 using MinishCapRandomizerSeedGeneratorBot.Models;
 using MinishCapRandomizerSeedGeneratorBot.Threading;
 using MinishCapRandomizerSeedGeneratorBot.Threading.Models;
 using RandomizerCore.Controllers;
+using RandomizerCore.Random;
 
 namespace MinishCapRandomizerSeedGeneratorBot.Api.Handlers;
 
@@ -50,8 +52,13 @@ public class SeedHandler
         var showSeed = parameters.FirstOrDefault(param => param.Name == ShowSeedNumber);
         var onlyShowInvoker = parameters.FirstOrDefault(param => param.Name == OnlyShowYouSeed);
 
-        var seedNum = seed == null ? new Random().Next() : (int)((long)seed.Value & int.MaxValue);
-        while (seedNum == 0) seedNum = new Random().Next();
+        var seedNum = seed == null ? new SquaresRandomNumberGenerator().Next() : 0UL;
+        if (seed != null && !ulong.TryParse((string)seed.Value, NumberStyles.HexNumber, default, out seedNum))
+        {
+            await command.RespondAsync("The provided seed number is not valid! Please provide a valid seed.", ephemeral: true);
+            return;
+        }
+        while (seedNum == 0) seedNum = new SquaresRandomNumberGenerator().Next();
 
         var settings = preset == null ? 
             settingsString == null ? "" : (string)settingsString.Value 
@@ -84,7 +91,7 @@ public class SeedHandler
         return new SlashCommandBuilder()
             .WithName(Constants.GenerateSeed)
             .WithDescription("Generates a seed and uploads the patch if generation succeeded.")
-            .AddOption(Seed, ApplicationCommandOptionType.Integer, "The seed number to use for generation.", isRequired: false)
+            .AddOption(Seed, ApplicationCommandOptionType.String, "The seed number to use for generation.", isRequired: false)
             .AddOption(BuildOptionForPresets())
             .AddOption(SettingsString, ApplicationCommandOptionType.String, "The settings string to use for generation.", isRequired: false)
             .AddOption(CosmeticsString, ApplicationCommandOptionType.String, "The cosmetics string to use for generation.", isRequired: false)

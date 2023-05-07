@@ -50,7 +50,7 @@ public class GenerateSeedTask
         }
 
         if (request.ShowSeedInfoInResponse)
-            responseBuilder.Append("[INFO] Seed number: ").Append(request.Seed).AppendLine();
+            responseBuilder.Append("[INFO] Seed number: ").Append($"{request.Seed:X}").AppendLine();
         
         shuffler.LoadLocations();
 

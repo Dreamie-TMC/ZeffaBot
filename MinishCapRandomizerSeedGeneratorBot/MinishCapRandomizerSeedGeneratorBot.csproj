@@ -13,6 +13,7 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+      <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,14 +34,23 @@
       <EmbeddedResource Include="Resources\Presets.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="ColorzCore">
+        <HintPath>..\..\..\..\..\Packages\randomizercore\1.0.0\ColorzCore.dll</HintPath>
+      </Reference>
+      <Reference Include="RandomizerCore">
+        <HintPath>..\..\..\..\..\Packages\randomizercore\1.0.0\RandomizerCore.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
     <Target Name="PostBuildDebug" Condition="'$(Configuration)' == 'Debug'" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy &quot;$(ProjectDir)..\..\rando-dev\RandomizerCore\Resources\Patches\&quot; &quot;$(TargetDir)Patches\&quot; /y /d /s" />
-        <Exec Command="xcopy &quot;$(ProjectDir)..\..\rando-dev\Vendor\Language Raws\&quot; &quot;$(TargetDir)Language Raws\&quot; /y /d /s" />
+        <Exec Command="xcopy &quot;$(ProjectDir)..\..\main_randomizer\RandomizerCore\Resources\Patches\&quot; &quot;$(TargetDir)Patches\&quot; /y /d /s" />
+        <Exec Command="xcopy &quot;$(ProjectDir)..\..\main_randomizer\Vendor\Language Raws\&quot; &quot;$(TargetDir)Language Raws\&quot; /y /d /s" />
     </Target>
 
     <Target Name="PostBuildRelease" Condition="'$(Configuration)' == 'Release'" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy &quot;$(ProjectDir)..\..\rando-dev\RandomizerCore\Resources\Patches\&quot; &quot;$(PublishDir)Patches\&quot; /y /d /s" />
-        <Exec Command="xcopy &quot;$(ProjectDir)..\..\rando-dev\Vendor\Language Raws\&quot; &quot;$(PublishDir)Language Raws\&quot; /y /d /s" />
+        <Exec Command="xcopy &quot;$(ProjectDir)..\..\main_randomizer\RandomizerCore\Resources\Patches\&quot; &quot;$(PublishDir)Patches\&quot; /y /d /s" />
+        <Exec Command="xcopy &quot;$(ProjectDir)..\..\main_randomizer\Vendor\Language Raws\&quot; &quot;$(PublishDir)Language Raws\&quot; /y /d /s" />
     </Target>
 
 </Project>

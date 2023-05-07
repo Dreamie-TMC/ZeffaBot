@@ -55,7 +55,7 @@ public class GuildSettings
             Guild = new Models.Guild
             {
                 GuildId = guildId,
-            }
+            },
         });
     }
 

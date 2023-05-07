@@ -5,7 +5,7 @@ namespace MinishCapRandomizerSeedGeneratorBot.Threading.Models;
 public class SeedGenerationRequest
 {
     public SocketSlashCommand Command { get; set; }
-    public int Seed { get; set; }
+    public ulong Seed { get; set; }
     public string SettingsString { get; set; }
     public string CosmeticsString { get; set; }
     public bool UploadSpoiler { get; set; }

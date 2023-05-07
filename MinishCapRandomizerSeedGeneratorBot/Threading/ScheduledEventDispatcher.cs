@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.Metrics;
 using MinishCapRandomizerSeedGeneratorBot.Guild;
 using MinishCapRandomizerSeedGeneratorBot.Threading.Models;
+using RandomizerCore.Random;
 
 namespace MinishCapRandomizerSeedGeneratorBot.Threading;
 
@@ -24,8 +25,8 @@ public class ScheduledEventDispatcher
     
     public void ThreadingLoop()
     {
-        Thread.Sleep(5000);
-        var guildsWithAsyncSupport = Settings.GetGuildsFromFilter(guild => guild.AsyncConfig.SupportsWeeklyAutomaticAsyncGeneration);
+        Thread.Sleep(10000);
+        var guildsWithAsyncSupport = Settings.GetGuildsFromFilter(guild => guild.AsyncConfig != null && guild.AsyncConfig.SupportsWeeklyAutomaticAsyncGeneration);
         while (!_exiting)
         {
             if (_guildCountUpdated)
@@ -44,7 +45,7 @@ public class ScheduledEventDispatcher
                 {
                     for (var i = 0; i < guild.AsyncConfig.TotalSeedsToGenerate; ++i)
                     {            
-                        var seed = new Random().Next();
+                        var seed = new SquaresRandomNumberGenerator().Next();
                         var strings =
                             guild.AsyncConfig.AsyncGenerationSettingAndCosmeticStrings.FirstOrDefault(x => x.SeedNumber == i + 1);
                         
